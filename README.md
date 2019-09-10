@@ -25,13 +25,20 @@ Which advertising channel has a strong relationship with sales volume, and can b
 
 ```python
 # Load necessary libraries and import the data
-
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.formula.api import ols
+import scipy.stats as stats
+import seaborn as sns
 ```
 
 
 ```python
 # Check the columns and first few rows
-
+df = pd.read_csv('Advertising.csv', index_col=0)
+df.head()
 ```
 
 
@@ -106,7 +113,7 @@ Which advertising channel has a strong relationship with sales volume, and can b
 
 ```python
 # Get the 5-point statistics for data 
-
+df.describe()
 ```
 
 
@@ -199,10 +206,9 @@ Which advertising channel has a strong relationship with sales volume, and can b
 
 
 
-
-```python
-# Describe the contents of this dataset
-```
+#### Describe the contents of this dataset
+There are 200 observations, all numerical values, no missing values.
+TV mean and mode are similar and likely normallly distributed since range is 300-0, Quantile range is 75-218. Radio 0-50 range, mean and mode similar but quantile suggests more towards lower end (may be some outliers in the higher range). Newspaper very much skewed lower, since 0-114 max, but mean and mode are 30, 25. and quantile range is 12-45. May need to be aware of those outliers. Sales also not too made. might be easier to plot it since comparing mean and modes and quantile ranges are close but not the same.
 
 
 
@@ -211,30 +217,112 @@ Which advertising channel has a strong relationship with sales volume, and can b
 
 
 ```python
+plt.style.use('ggplot')
+```
+
+
+```python
+sns.distplot(df['TV'], color='red', kde_kws={'color': 'blue'})
+```
+
+    /anaconda3/envs/learn-env/lib/python3.6/site-packages/scipy/stats/stats.py:1713: FutureWarning: Using a non-tuple sequence for multidimensional indexing is deprecated; use `arr[tuple(seq)]` instead of `arr[seq]`. In the future this will be interpreted as an array index, `arr[np.array(seq)]`, which will result either in an error or a different result.
+      return np.add.reduce(sorted[indexer] * weights, axis=axis) / sumval
+
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x7fbe31c0bcf8>
+
+
+
+
+![png](index_files/index_9_2.png)
+
+
+
+```python
+sns.distplot(df['radio'], kde_kws={'color': 'blue'})
+```
+
+    /anaconda3/envs/learn-env/lib/python3.6/site-packages/scipy/stats/stats.py:1713: FutureWarning: Using a non-tuple sequence for multidimensional indexing is deprecated; use `arr[tuple(seq)]` instead of `arr[seq]`. In the future this will be interpreted as an array index, `arr[np.array(seq)]`, which will result either in an error or a different result.
+      return np.add.reduce(sorted[indexer] * weights, axis=axis) / sumval
+
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x7fbdd0c99390>
+
+
+
+
+![png](index_files/index_10_2.png)
+
+
+
+```python
+sns.distplot(df['newspaper'], kde_kws={'color': 'blue'})
+```
+
+    /anaconda3/envs/learn-env/lib/python3.6/site-packages/scipy/stats/stats.py:1713: FutureWarning: Using a non-tuple sequence for multidimensional indexing is deprecated; use `arr[tuple(seq)]` instead of `arr[seq]`. In the future this will be interpreted as an array index, `arr[np.array(seq)]`, which will result either in an error or a different result.
+      return np.add.reduce(sorted[indexer] * weights, axis=axis) / sumval
+
+
+
+
+
+    <matplotlib.axes._subplots.AxesSubplot at 0x7fbe406734a8>
+
+
+
+
+![png](index_files/index_11_2.png)
+
+
+
+```python
+sns.distplot(df['sales'], kde_kws={'color': 'blue'})
+```
+
+
+    ---------------------------------------------------------------------------
+
+    NameError                                 Traceback (most recent call last)
+
+    <ipython-input-2-8b71b6b830e2> in <module>()
+    ----> 1 sns.distplot(df['sales'], kde_kws={'color': 'blue'})
+    
+
+    NameError: name 'sns' is not defined
+
+
+#### Observations
+As suspected, newspaper is very much skewed right (long tail at upper end) however they are not outliers it seems gradual enough. TV and Radio seem to have two peaks, but overall fairly normal
+
+
+```python
 # For all the variables, check if they hold normality assumption
 
 ```
 
 
-![png](index_files/index_8_0.png)
+![png](index_files/index_14_0.png)
 
 
 
-![png](index_files/index_8_1.png)
+![png](index_files/index_14_1.png)
 
 
 
-![png](index_files/index_8_2.png)
+![png](index_files/index_14_2.png)
 
 
 
-![png](index_files/index_8_3.png)
+![png](index_files/index_14_3.png)
 
 
 
-```python
-# Record your observations on normality here 
-```
 
 #### Remember . Nothing is perfect . So be positive 
 <img src="https://4.bp.blogspot.com/-e-CL8iluz2o/Vt3Ntg_38kI/AAAAAAAAIJo/zGJMyNaMbFY/s1600/skewed.jpg" width=400>
@@ -244,18 +332,34 @@ Use scatterplots to plot each predictor against the target variable
 
 
 ```python
-# visualize the relationship between the preditors and the target using scatterplots
-
+fig = plt.figure(figsize=[15,5])
+ax = fig.add_subplot(131)
+ax.scatter(df['TV'], df['sales'], c='purple')
+plt.ylabel('Sales')
+ax.set_xlabel('TV')
+ax1 = fig.add_subplot(132, sharey=ax)
+ax1.scatter(df['radio'], df['sales'], c='purple')
+ax1.set_xlabel('radio')
+ax2 = fig.add_subplot(133, sharey=ax)
+ax2.scatter(df['newspaper'], df['sales'], c='purple')
+ax2.set_xlabel('newspaper')
+plt.show()
 ```
 
 
-![png](index_files/index_12_0.png)
+![png](index_files/index_18_0.png)
 
 
 
 ```python
-# Record yor observations on linearity here 
+# visualize the relationship between the preditors and the target using scatterplots
+
 ```
+
+#### Record yor observations on linearity here 
+TV looks somewhat lineary, higher ranges start to spread out. Some linear trend in radio but also varied. some high end on the radio scale has very low sales. Newspapers seems to be all over the place and not linear, perhaps not even correlated.
+
+
 
 ### Conclusion so far !
 
@@ -271,12 +375,87 @@ Note: Kurtosis can be dealt with using techniques like log normalization to "pus
 # import libraries
 
 # build the formula 
+f = 'sales~TV'
 
 # create a fitted model in one line
-
+model = ols(formula=f, data=df).fit()
 ```
 
 ### Step 5: Get regression diagnostics summary
+
+
+
+```python
+model.summary()
+```
+
+
+
+
+<table class="simpletable">
+<caption>OLS Regression Results</caption>
+<tr>
+  <th>Dep. Variable:</th>          <td>sales</td>      <th>  R-squared:         </th> <td>   0.612</td>
+</tr>
+<tr>
+  <th>Model:</th>                   <td>OLS</td>       <th>  Adj. R-squared:    </th> <td>   0.610</td>
+</tr>
+<tr>
+  <th>Method:</th>             <td>Least Squares</td>  <th>  F-statistic:       </th> <td>   312.1</td>
+</tr>
+<tr>
+  <th>Date:</th>             <td>Tue, 09 Jul 2019</td> <th>  Prob (F-statistic):</th> <td>1.47e-42</td>
+</tr>
+<tr>
+  <th>Time:</th>                 <td>13:09:57</td>     <th>  Log-Likelihood:    </th> <td> -519.05</td>
+</tr>
+<tr>
+  <th>No. Observations:</th>      <td>   200</td>      <th>  AIC:               </th> <td>   1042.</td>
+</tr>
+<tr>
+  <th>Df Residuals:</th>          <td>   198</td>      <th>  BIC:               </th> <td>   1049.</td>
+</tr>
+<tr>
+  <th>Df Model:</th>              <td>     1</td>      <th>                     </th>     <td> </td>   
+</tr>
+<tr>
+  <th>Covariance Type:</th>      <td>nonrobust</td>    <th>                     </th>     <td> </td>   
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+      <td></td>         <th>coef</th>     <th>std err</th>      <th>t</th>      <th>P>|t|</th>  <th>[0.025</th>    <th>0.975]</th>  
+</tr>
+<tr>
+  <th>Intercept</th> <td>    7.0326</td> <td>    0.458</td> <td>   15.360</td> <td> 0.000</td> <td>    6.130</td> <td>    7.935</td>
+</tr>
+<tr>
+  <th>TV</th>        <td>    0.0475</td> <td>    0.003</td> <td>   17.668</td> <td> 0.000</td> <td>    0.042</td> <td>    0.053</td>
+</tr>
+</table>
+<table class="simpletable">
+<tr>
+  <th>Omnibus:</th>       <td> 0.531</td> <th>  Durbin-Watson:     </th> <td>   1.935</td>
+</tr>
+<tr>
+  <th>Prob(Omnibus):</th> <td> 0.767</td> <th>  Jarque-Bera (JB):  </th> <td>   0.669</td>
+</tr>
+<tr>
+  <th>Skew:</th>          <td>-0.089</td> <th>  Prob(JB):          </th> <td>   0.716</td>
+</tr>
+<tr>
+  <th>Kurtosis:</th>      <td> 2.779</td> <th>  Cond. No.          </th> <td>    338.</td>
+</tr>
+</table><br/><br/>Warnings:<br/>[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+
+
+
+### Record your observations on "Goodness of fit"
+
+R-squared is above .5 but not very close to one. Seems like some of the data is explained but not all of it - matches what we see in the TV~sales plot. Std Error is around 10 which is quite large given the scale goes from 0-25. HOwever the p>|t| value is 0.002 so it is a significant coefficient and we can reject the null hypothesis (that TV has no effect on sales), TV ads does have an association on sales.
+
+
+Note here that the coefficients represent associations, not causations
 
 
 
@@ -345,12 +524,6 @@ Note: Kurtosis can be dealt with using techniques like log normalization to "pus
 
 
 
-### Record your observations on "Goodness of fit"
-
-
-Note here that the coefficients represent associations, not causations
-
-
 ### Step 6:  Draw a prediction line with data points omn a scatter plot for X (TV) and Y (Sales)
 
 Hint: We can use `model.predict()` functions to predict the start and end point of of regression line for the minimum and maximum values in the 'TV' variable. 
@@ -360,9 +533,58 @@ Hint: We can use `model.predict()` functions to predict the start and end point 
 # create a DataFrame with the minimum and maximum values of TV
 
 # make predictions for those x values and store them
+min_max_df = pd.DataFrame(data={'TV': [df.TV.min(), df.TV.max()]})
+min_max_df['Prediction'] = model.predict(min_max_df)
+min_max_df                                
+```
 
 
+
+
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>TV</th>
+      <th>Prediction</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.7</td>
+      <td>7.065869</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>296.4</td>
+      <td>21.122454</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
 # first, plot the observed data and the least squares line
+fig = plt.figure(figsize=[10,8])
+
 ```
 
           TV
@@ -374,7 +596,7 @@ Hint: We can use `model.predict()` functions to predict the start and end point 
 
 
 
-![png](index_files/index_22_1.png)
+![png](index_files/index_33_1.png)
 
 
 ### Step 7: Visualize the error term for variance and heteroscedasticity
@@ -385,13 +607,15 @@ Hint: We can use `model.predict()` functions to predict the start and end point 
 ```
 
 
-![png](index_files/index_24_0.png)
+![png](index_files/index_35_0.png)
 
 
 
 ```python
 # Record Your observations on residuals
 ```
+
+
 
 ### Next, repeat above for radio and go through the same process, recording your observations
 
@@ -407,11 +631,11 @@ Hint: We can use `model.predict()` functions to predict the start and end point 
 
 
 
-![png](index_files/index_27_1.png)
+![png](index_files/index_39_1.png)
 
 
 
-![png](index_files/index_27_2.png)
+![png](index_files/index_39_2.png)
 
 
 
